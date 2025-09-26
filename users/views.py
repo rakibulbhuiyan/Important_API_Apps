@@ -69,6 +69,71 @@ def get_tokens_for_user(user):
 
 
 from rest_framework.exceptions import APIException
+from dj_rest_auth.registration.views import SocialLoginView
+from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
+from allauth.socialaccount.providers.oauth2.client import OAuth2Error
+from allauth.socialaccount.providers.apple.views import AppleOAuth2Adapter
+
+class GoogleLoginView(SocialLoginView):
+    adapter_class = GoogleOAuth2Adapter
+
+    def post(self, request, *args, **kwargs):
+        try:
+            response = super().post(request, *args, **kwargs)
+            user = self.user
+            print(user)
+
+            refresh = RefreshToken.for_user(user)
+            return Response({
+                "access": str(refresh.access_token),
+                "refresh": str(refresh),
+                "user": {
+                    "id": user.id,
+                    "email": user.email,
+                }
+            })
+        
+        except OAuth2Error as e:
+            return Response({
+                "error": "Access token expired or invalid. Please login again.",
+                "detail": str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+#Apple Login View
+class AppleLoginView(BaseAPIView, SocialLoginView):
+    adapter_class = AppleOAuth2Adapter
+
+    def post(self, request, *args, **kwargs):
+        try:
+            id_token = request.data.get("id_token")
+            if not id_token:
+                return self.error_response(
+                    message="id_token is required",
+                    status_code=status.HTTP_400_BAD_REQUEST
+                )
+
+            response = super().post(request, *args, **kwargs)
+            user = self.user
+
+            return self.success_response(
+                message="Apple login successful.",
+                data={
+                    "access": response.data.get("access_token"),
+                    "refresh": response.data.get("refresh_token"),
+                    "user": {
+                        "id": user.id,
+                        "email": user.email,
+                    }
+                },
+                status_code=status.HTTP_200_OK
+            )
+
+        except OAuth2Error as e:
+            return self.error_response(
+                message="Access token expired or invalid. Please login again.",
+                data={"detail": str(e)},
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
 
 class SignupView(BaseAPIView):
     def post(self, request):

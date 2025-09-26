@@ -2,6 +2,10 @@ from django.urls import path
 # from .views import UpdateStreakAPIView
 from .views import SignupView, LoginView, LogoutView, ProfileView, ChangePassword, PasswordResetRequestAPIView, OTPVerificationAPIView, PasswordResetAPIView, DeleteAccountAPIView
 from rest_framework_simplejwt.views import TokenRefreshView
+from .views import GoogleLoginView, AppleLoginView
+
+
+
 
 urlpatterns = [
     path('auth/signup/', SignupView.as_view(), name='signup'),
@@ -16,4 +20,7 @@ urlpatterns = [
     path("auth/password-reset/request/", PasswordResetRequestAPIView.as_view(), name="password-reset-request"),
     path("auth/password-reset/verify-otp/", OTPVerificationAPIView.as_view(), name="password-reset-verify-otp"),
     path("auth/password-reset/change-password/", PasswordResetAPIView.as_view(), name="password-reset-change"),
+
+    path('auth/google/', GoogleLoginView.as_view(), name='google_login'),
+    path('auth/apple/', AppleLoginView.as_view(), name='apple_login'),
 ]
