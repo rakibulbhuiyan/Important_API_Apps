@@ -12,3 +12,4 @@ class IsProfessional(BasePermission):
 class IsUser(BasePermission):
     def has_permission(self, request, view):
         return request.user.is_authenticated and request.user.role == "user"
+# End of permissions.py
